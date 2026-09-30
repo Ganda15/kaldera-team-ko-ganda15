@@ -21,6 +21,12 @@ class Agent:
     token_budget: int = 1000
     step_cost: int = 100
 
+    def __init_subclass__(cls, **kwargs):
+        # La frontière est codée une seule fois, ici : un sous-agent ne peut pas l'élargir.
+        super().__init_subclass__(**kwargs)
+        if "accepts" in cls.__dict__:
+            raise TypeError(f"{cls.__name__} ne doit pas redéfinir accepts()")
+
     @property
     def system_prompt(self) -> str:
         handled = ", ".join(sorted(s.value for s in self.handles))
@@ -37,6 +43,8 @@ class Agent:
         if not self.accepts(step):
             raise RoleViolation(f"{self.name} ne traite pas l'étape {step}")
         used = state.agent_tokens.get(self.name, 0) + self.step_cost
+        if used > self.token_budget:
+            raise BudgetExceeded(f"{self.name} dépasse son budget de tokens ({used} > {self.token_budget})")
         state.agent_tokens[self.name] = used
         assert step is not None
         self.act(state, step)

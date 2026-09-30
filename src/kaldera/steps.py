@@ -12,13 +12,8 @@ class Step(str, Enum):
 
 
 # Correspondance entre les libellés employés dans les scénarios et les membres
-# de l'énumération.
-STEP_BY_NAME: dict[str, Step] = {
-    "RESEARCH": Step.RESEARCH,
-    "DRAFT": Step.DRAFT,
-    "PROOFREAD": Step.REVIEW,
-    "FINALIZE": Step.FINALIZE,
-}
+# de l'énumération. Dérivée de l'énumération : le vocabulaire ne peut plus dériver de la spec.
+STEP_BY_NAME: dict[str, Step] = {step.value: step for step in Step}
 
 
 def step_from_name(name: str) -> Step:

@@ -12,5 +12,10 @@ class Finalizer(Agent):
     handles = {Step.FINALIZE}
 
     def act(self, state: TeamState, step: Step) -> None:
-        state.artifacts["final"] = f"final:{state.artifacts.get('review', '')}"
+        # Décision de conception : assembler le dernier artefact produit (la spec ne dit rien
+        # du cas research_only, sans étape REVIEW).
+        last = next(
+            (state.artifacts[k] for k in ("review", "draft", "research") if k in state.artifacts), ""
+        )
+        state.artifacts["final"] = f"final:{last}"
         state.status = "done"
