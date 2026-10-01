@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 
 def record(state: "TeamState", agent_id: str, message: str) -> dict:
-    entry = {"message": message}
+    step = state.current_step()
+    entry = {"agent_id": agent_id, "step": step.value if step else None, "message": message}
     state.log.append(entry)
     return entry

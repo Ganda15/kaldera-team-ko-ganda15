@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir uv
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY scenarios ./scenarios
+COPY specs ./specs
+
+RUN uv sync --no-dev
+
+# PORT est fourni par l'hébergeur (Render, Hugging Face...) ; 8000 en local.
+ENV PORT=8000
+EXPOSE 8000
+CMD ["sh", "-c", "uv run uvicorn kaldera.web:app --host 0.0.0.0 --port ${PORT}"]

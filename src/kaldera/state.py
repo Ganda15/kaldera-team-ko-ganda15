@@ -13,6 +13,7 @@ class TeamState:
     step_index: int = 0
     artifacts: dict[str, str] = field(default_factory=dict)
     status: str = "pending"
+    stop_reason: str | None = None
     step_count: int = 0
     agent_tokens: dict[str, int] = field(default_factory=dict)
     log: list[dict] = field(default_factory=list)

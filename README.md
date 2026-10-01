@@ -53,10 +53,31 @@ make down       # stoppe le service docker
 
 ## Known issues
 
-- L'orchestration et le routage présentent encore des comportements à fiabiliser
-  sur certains scénarios ; le rejeu via `scenarios/` reste la référence de comportement.
-- Les garde-fous d'exécution (budget d'étapes, budget de tokens, journalisation)
-  demandent une passe de validation supplémentaire avant un usage réel.
+- Le chemin « live » branché sur le modèle (`llm.py`) n'est pas couvert par les tests :
+  ils utilisent les agents déterministes, sans clé Azure.
+
+## Corrections de l'orchestration
+
+Les défauts de boucle, de rôles et d'écart à la spécification sont corrigés sur la branche
+`fix/orchestration`. Détail des défauts, des choix et de leur vérification :
+[`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+- Le superviseur est le seul point de passage : il choisit l'agent responsable, vérifie le
+  budget avant chaque appel et la progression après, et arrête le flux avec une raison
+  (`stop_reason`) en cas d'anomalie.
+- Chaque étape a un seul responsable ; la table de routage est dérivée des `handles` et
+  vérifiée au démarrage.
+- Le chemin LangGraph (`graph.py`) réutilise la même logique que le runner.
+- Tests : 14 tests fournis + tests de trace (`tests/test_trace.py`), de routage
+  (`tests/test_routing_guards.py`), LangGraph (`tests/test_graph.py`) et de la page de
+  démonstration (`tests/test_web.py`) : 32 passent.
+
+## Page de test
+
+`src/kaldera/web.py` sert une page qui rejoue un scénario (fourni ou libre), avec le runner ou
+le graphe LangGraph, éventuellement avec une panne simulée, et affiche la trace, les artefacts,
+la raison d'arrêt et les contrôles de la spec. Lancement : `docker compose up web`, puis
+http://localhost:8000.
 
 ## License
 

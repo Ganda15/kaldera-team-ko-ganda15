@@ -3,3 +3,9 @@ services:
     build: .
     env_file: .env
     command: uv run python -m kaldera.cli
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "8000:8000"
