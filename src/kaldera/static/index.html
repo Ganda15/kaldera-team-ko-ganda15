@@ -41,6 +41,17 @@
   .ok { color:var(--ok); } .ko { color:var(--ko); }
   section + section { margin-top:18px; }
   .empty { color:var(--muted); }
+  .brief { max-width:1100px; margin:0 auto 20px; padding:0 16px; }
+  .brief-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .brief-head p { margin:0; color:var(--muted); font-size:.9rem; }
+  .grid4 { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
+  @media (max-width:820px) { .grid4 { grid-template-columns:1fr; } }
+  .point h3 { margin:0 0 2px; font-size:1rem; }
+  .point .quote { font-size:.8rem; color:var(--muted); font-style:italic; margin:0 0 8px; }
+  .point .verdict { font-weight:700; font-size:.85rem; margin-bottom:6px; }
+  .point li { padding:5px 0; border-bottom:1px solid var(--line); }
+  .point li:last-child { border-bottom:0; }
+  .point .detail { display:block; color:var(--muted); font-size:.8rem; margin-left:18px; overflow-wrap:anywhere; }
 </style>
 </head>
 <body>
@@ -48,6 +59,18 @@
   <h1>Kaldera · <span>orchestration multi-agents</span></h1>
   <p class="sub">Rejouer une demande et vérifier la trace : qui a agi, sur quelle étape, dans quel ordre, et comment le flux s'est arrêté.</p>
 </header>
+<section class="brief">
+  <div class="card">
+    <div class="brief-head">
+      <div>
+        <h2 style="margin:0">Vérifications du brief</h2>
+        <p>Les 4 points de la phase DÉVELOPPEMENT, contrôlés en direct sur le vrai code et comparés à <code>specs/flow_spec.md</code>.</p>
+      </div>
+      <button type="button" id="run-brief">Lancer les 4 vérifications</button>
+    </div>
+    <div class="grid4" id="brief"><p class="empty">Clique sur « Lancer les 4 vérifications ». La non-régression relance les 14 tests fournis : quelques secondes.</p></div>
+  </div>
+</section>
 <main>
   <div class="card">
     <h2>Scénarios fournis</h2>
@@ -121,6 +144,37 @@ async function run(payload) {
   }
   box.append(art);
 }
+
+async function runBrief() {
+  const box = $("brief"), btn = $("run-brief");
+  btn.disabled = true; btn.textContent = "Vérification en cours…";
+  box.replaceChildren(el("p", "Exécution des contrôles et des 14 tests fournis…", "empty"));
+  try {
+    const res = await fetch("/api/brief-checks");
+    const body = await res.json();
+    box.replaceChildren();
+    body.sections.forEach(s => {
+      const card = el("div", undefined, "card point");
+      const ok = !s.skipped && s.checks.length > 0 && s.checks.every(c => c.ok);
+      const passed = s.checks.filter(c => c.ok).length;
+      card.append(el("h3", s.title), el("p", "Brief : « " + s.brief + " »", "quote"),
+                  el("div", s.skipped ? "non lancé" : (ok ? "✓ " : "✗ ") + passed + " / " + s.checks.length + " contrôles réussis",
+                     "verdict " + (ok ? "ok" : "ko")));
+      const ul = el("ul", undefined, "checks");
+      s.checks.forEach(c => {
+        const li = el("li", (c.ok ? "✓ " : "✗ ") + c.label, c.ok ? "ok" : "ko");
+        if (c.detail) li.append(el("span", c.detail, "detail"));
+        ul.append(li);
+      });
+      card.append(ul); box.append(card);
+    });
+  } catch (e) {
+    box.replaceChildren(el("p", "Erreur : " + e, "reason"));
+  } finally {
+    btn.disabled = false; btn.textContent = "Relancer les 4 vérifications";
+  }
+}
+$("run-brief").onclick = runBrief;
 
 fetch("/api/scenarios").then(r => r.json()).then(list => {
   list.forEach(s => {

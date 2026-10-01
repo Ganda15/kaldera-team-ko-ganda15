@@ -97,6 +97,13 @@ def home() -> str:
     return PAGE_FILE.read_text(encoding="utf-8")
 
 
+@app.get("/api/brief-checks")
+def brief_checks(regression: bool = True) -> dict:
+    from .brief_checks import all_sections
+
+    return {"sections": all_sections(regression)}
+
+
 @app.get("/api/scenarios")
 def scenarios() -> list[dict]:
     return _load_scenarios()
